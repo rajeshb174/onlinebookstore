@@ -1,0 +1,41 @@
+# Docker - Build & Push to Docker Hub
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  imageRepository: 'rajeshb174/main'     # Docker Hub repo: <username>/<repo>
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: BuildAndPush
+  displayName: Build and Push Docker image
+  jobs:
+  - job: BuildAndPush
+    displayName: Build and Push
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - checkout: self
+      fetchDepth: 1
+
+    - task: Docker@2
+      displayName: Login to Docker Hub
+      inputs:
+        command: login
+        containerRegistry: 'dockerhub'   # <-- your service connection name
+
+    - task: Docker@2
+      displayName: Build and Push
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        tags: |
+          $(tag)
+          latest
